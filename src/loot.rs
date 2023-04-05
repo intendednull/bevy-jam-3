@@ -5,7 +5,11 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng};
 
-use crate::{collision, Experience, Player, Speed};
+use crate::{
+    attribute::{Experience, Speed},
+    collision,
+    player::Player,
+};
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
@@ -64,7 +68,7 @@ fn drop_loot(
     mut rng: ResMut<GlobalRng>,
 ) {
     for &Event(pos) in events.iter() {
-        for _ in 0..rng.u32(1..20) {
+        for _ in 0..rng.u32(10..30) {
             commands
                 .spawn(MaterialMesh2dBundle {
                     mesh: meshes.add(shape::Cube::new(5.).into()).into(),
