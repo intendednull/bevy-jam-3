@@ -6,7 +6,7 @@ use bevy_rapier2d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng};
 
 use crate::{
-    attribute::{Experience, Speed},
+    attribute::{Experience, MoveSpeed},
     collision,
     player::Player,
 };
@@ -45,7 +45,7 @@ fn pickup_loot(
 
 fn move_loot_to_player(
     mut query: Query<(&mut Velocity, &Transform), With<Loot>>,
-    player: Query<(&Transform, &Speed), With<Player>>,
+    player: Query<(&Transform, &MoveSpeed), With<Player>>,
     time: Res<Time>,
 ) {
     let (player, speed) = player.single();

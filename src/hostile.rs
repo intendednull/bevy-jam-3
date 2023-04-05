@@ -4,12 +4,16 @@ use bevy::prelude::{self, *};
 use bevy_rapier2d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng};
 
-use crate::{attribute::Health, collision, loot, player::Player};
+use crate::{
+    attribute::{self, MaxHealth},
+    collision, loot,
+    player::Player,
+};
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpawnRate(Duration::from_secs(2)))
+        app.insert_resource(SpawnRate(Duration::from_millis(100)))
             .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_system(spawn)
             .add_system(despawn_hostiles)
@@ -23,7 +27,7 @@ pub struct Hostile;
 #[derive(Debug, Clone, Resource)]
 pub struct SpawnTimer(pub Timer);
 #[derive(Debug, Clone, Resource)]
-pub struct SpawnRate(Duration);
+pub struct SpawnRate(pub Duration);
 
 fn update_spawn_timer(mut timer: ResMut<SpawnTimer>, rate: Res<SpawnRate>) {
     if !rate.is_changed() {
@@ -51,33 +55,33 @@ fn spawn(
         };
 
         let transform = Transform::from_translation(pos);
-        // Hostile
-        commands
-            .spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::RED,
-                    custom_size: Some(Vec2::new(30.0, 30.0)),
-                    ..default()
-                },
-                transform,
+        let mut commands = commands.spawn(SpriteBundle {
+            sprite: Sprite {
+                color: Color::RED,
+                custom_size: Some(Vec2::new(30.0, 30.0)),
                 ..default()
-            })
-            .insert((
-                Hostile,
-                GravityScale(0.0),
-                Velocity::default(),
-                RigidBody::Dynamic,
-                Collider::cuboid(20., 20.),
-                Friction::coefficient(0.),
-                CollisionGroups::new(
-                    collision::group::HOSTILE,
-                    collision::group::PLAYER_PROJECTILE
-                        | collision::group::HOSTILE
-                        | collision::group::PLAYER,
-                ),
-                ActiveEvents::COLLISION_EVENTS,
-                Health(100),
-            ));
+            },
+            transform,
+            ..default()
+        });
+
+        commands.insert((
+            Hostile,
+            GravityScale(0.0),
+            Velocity::default(),
+            RigidBody::Dynamic,
+            Collider::cuboid(20., 20.),
+            Friction::coefficient(0.),
+            CollisionGroups::new(
+                collision::group::HOSTILE,
+                collision::group::PLAYER_PROJECTILE
+                    | collision::group::HOSTILE
+                    | collision::group::PLAYER,
+            ),
+            ActiveEvents::COLLISION_EVENTS,
+        ));
+
+        attribute::insert_common(&mut commands);
     }
 }
 
@@ -99,12 +103,12 @@ fn move_to_player(
 }
 
 fn despawn_hostiles(
-    query: Query<(Entity, &Health, &Transform), (With<Hostile>, Changed<Health>)>,
+    query: Query<(Entity, &MaxHealth, &Transform), (With<Hostile>, Changed<MaxHealth>)>,
     mut commands: Commands,
     mut loot_writer: EventWriter<loot::Event>,
 ) {
     for (entity, health, transform) in query.iter() {
-        if health.0 == 0 {
+        if health.0 <= 0 {
             commands.entity(entity).despawn();
             loot_writer.send(loot::Event(transform.translation));
         }

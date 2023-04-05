@@ -1,12 +1,9 @@
-use std::time::Duration;
-
 use bevy::prelude::{self, *};
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    attribute::{AttackSpeed, AttackSpeedTimer, Damage, Experience, Range, Speed},
+    attribute::{self, Experience, MoveSpeed},
     collision,
-    projectile::ProjectileSpeed,
 };
 
 pub struct Plugin;
@@ -21,43 +18,39 @@ pub struct Player;
 
 fn setup(mut commands: Commands) {
     // Player
-    commands
-        .spawn(SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.25, 0.25, 0.75),
-                custom_size: Some(Vec2::new(30.0, 30.0)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::new(-50., 0., 0.)),
+    let mut player = commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: Color::rgb(0.25, 0.25, 0.75),
+            custom_size: Some(Vec2::new(30.0, 30.0)),
             ..default()
-        })
-        .insert((
-            Player,
-            Experience {
-                current: 0,
-                cap: 10,
-            },
-            Speed(2.5),
-            Collider::cuboid(20., 20.),
-            GravityScale(0.),
-            AttackSpeedTimer(Timer::from_seconds(0.5, TimerMode::Once)),
-            AttackSpeed(Duration::from_millis(100)),
-            ProjectileSpeed(500.),
-            CollisionGroups::new(
-                collision::group::PLAYER,
-                collision::group::HOSTILE
-                    | collision::group::HOSTILE_PROJECTILE
-                    | collision::group::LOOT,
-            ),
-            Damage(10),
-            Range(800.),
-        ));
+        },
+        transform: Transform::from_translation(Vec3::new(-50., 0., 0.)),
+        ..default()
+    });
+
+    player.insert((
+        Player,
+        Experience {
+            current: 0,
+            cap: 10,
+        },
+        Collider::cuboid(20., 20.),
+        GravityScale(0.),
+        CollisionGroups::new(
+            collision::group::PLAYER,
+            collision::group::HOSTILE
+                | collision::group::HOSTILE_PROJECTILE
+                | collision::group::LOOT,
+        ),
+    ));
+
+    attribute::insert_common(&mut player);
 }
 
 /// Move player with WASD
 fn move_player(
     keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, &Speed), With<Player>>,
+    mut query: Query<(&mut Transform, &MoveSpeed), With<Player>>,
 ) {
     let (mut transform, speed) = query.single_mut();
 

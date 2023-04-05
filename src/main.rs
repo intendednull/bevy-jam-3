@@ -1,4 +1,5 @@
 mod attribute;
+mod buff;
 mod camera;
 mod collision;
 mod hostile;
@@ -21,6 +22,7 @@ fn main() {
         .add_plugin(player::Plugin)
         .add_plugin(projectile::Plugin)
         .add_plugin(hostile::Plugin)
+        .add_plugin(buff::Plugin)
         .add_plugin(attribute::Plugin)
         .run();
 }
