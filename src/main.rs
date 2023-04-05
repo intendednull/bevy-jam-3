@@ -1,3 +1,6 @@
+mod collision;
+mod loot;
+
 use std::time::Duration;
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
@@ -12,6 +15,7 @@ fn main() {
         .add_plugin(RngPlugin::default())
         .insert_resource(SpawnTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
         .add_event::<ProjectileEvent>()
+        .add_plugin(loot::Plugin)
         .add_startup_system(setup)
         .add_system(move_player)
         .add_system(move_camera)
@@ -25,24 +29,20 @@ fn main() {
         .run();
 }
 
-pub mod collision_group {
-    use bevy_rapier2d::prelude::Group;
-
-    pub static PLAYER_PROJECTILE: Group = Group::GROUP_2;
-    pub static HOSTILE_PROJECTILE: Group = Group::GROUP_3;
-    pub static HOSTILE: Group = Group::GROUP_4;
-    pub static PLAYER: Group = Group::GROUP_5;
-}
-
 #[derive(Debug, Clone, Resource)]
 pub struct SpawnTimer(pub Timer);
 
+#[derive(Default, Component)]
+struct Experience {
+    pub current: u32,
+    pub cap: u32,
+}
 #[derive(Default, Component)]
 struct Player;
 #[derive(Default, Component)]
 struct Hostile;
 #[derive(Default, Component)]
-struct Speed(f64);
+struct Speed(f32);
 #[derive(Default, Component)]
 struct Health(u32);
 #[derive(Debug, Clone, Component)]
@@ -76,6 +76,10 @@ fn setup(
         })
         .insert((
             Player,
+            Experience {
+                current: 0,
+                cap: 10,
+            },
             Speed(2.5),
             Collider::cuboid(20., 20.),
             GravityScale(0.),
@@ -83,8 +87,10 @@ fn setup(
             AttackSpeed(Duration::from_millis(100)),
             ProjectileSpeed(500.),
             CollisionGroups::new(
-                collision_group::PLAYER,
-                collision_group::HOSTILE | collision_group::HOSTILE_PROJECTILE,
+                collision::group::PLAYER,
+                collision::group::HOSTILE
+                    | collision::group::HOSTILE_PROJECTILE
+                    | collision::group::LOOT,
             ),
         ));
 }
@@ -153,7 +159,7 @@ fn player_projectiles(
         commands
             .spawn(MaterialMesh2dBundle {
                 mesh: meshes.add(shape::Circle::new(5.).into()).into(),
-                material: materials.add(ColorMaterial::from(Color::YELLOW)),
+                material: materials.add(ColorMaterial::from(Color::MIDNIGHT_BLUE)),
                 ..default()
             })
             .insert((
@@ -164,7 +170,10 @@ fn player_projectiles(
                 TransformBundle::from(*player_transform),
                 Parent(player_entity),
                 Projectile,
-                CollisionGroups::new(collision_group::PLAYER_PROJECTILE, collision_group::HOSTILE),
+                CollisionGroups::new(
+                    collision::group::PLAYER_PROJECTILE,
+                    collision::group::HOSTILE,
+                ),
             ));
 
         timer.0.reset();
@@ -205,10 +214,10 @@ fn spawn_enemies(
                 Collider::cuboid(20., 20.),
                 Friction::coefficient(0.),
                 CollisionGroups::new(
-                    collision_group::HOSTILE,
-                    collision_group::PLAYER_PROJECTILE
-                        | collision_group::HOSTILE
-                        | collision_group::PLAYER,
+                    collision::group::HOSTILE,
+                    collision::group::PLAYER_PROJECTILE
+                        | collision::group::HOSTILE
+                        | collision::group::PLAYER,
                 ),
                 ActiveEvents::COLLISION_EVENTS,
                 Health(100),
@@ -290,12 +299,14 @@ fn handle_projectile_events(
 }
 
 fn despawn_hostiles(
-    query: Query<(Entity, &Health), (With<Hostile>, Changed<Health>)>,
+    query: Query<(Entity, &Health, &Transform), (With<Hostile>, Changed<Health>)>,
     mut commands: Commands,
+    mut loot_writer: EventWriter<loot::Event>,
 ) {
-    for (entity, health) in query.iter() {
+    for (entity, health, transform) in query.iter() {
         if health.0 == 0 {
             commands.entity(entity).despawn();
+            loot_writer.send(loot::Event(transform.translation));
         }
     }
 }
