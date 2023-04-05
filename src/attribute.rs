@@ -19,6 +19,8 @@ pub struct Health(pub u32);
 pub struct AttackSpeedTimer(pub Timer);
 #[derive(Debug, Clone, Component)]
 pub struct AttackSpeed(pub Duration);
+#[derive(Debug, Clone, Component)]
+pub struct Range(pub f32);
 #[derive(Default, Component)]
 pub struct Experience {
     pub current: u32,

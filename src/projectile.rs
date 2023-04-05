@@ -5,7 +5,7 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    attribute::{AttackSpeedTimer, Damage, Health},
+    attribute::{AttackSpeedTimer, Damage, Health, Range},
     collision,
     hostile::Hostile,
     player::Player,
@@ -15,6 +15,7 @@ pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(spawn_projectile)
+            .add_system(despawn_dead_projectiles)
             .add_system(detect_collisions);
     }
 }
@@ -92,6 +93,22 @@ fn detect_collisions(
                     health.0 = health.0.saturating_sub(damage.0);
                 }
             }
+        }
+    }
+}
+
+fn despawn_dead_projectiles(
+    projectiles: Query<(Entity, &Transform), With<Projectile>>,
+    player: Query<(&Transform, &Range), With<Player>>,
+    mut commands: Commands,
+) {
+    let (transform, range) = player.single();
+    for (entity, projectile_transform) in projectiles.iter() {
+        let distance = projectile_transform
+            .translation
+            .distance(transform.translation);
+        if distance > range.0 {
+            commands.entity(entity).despawn();
         }
     }
 }

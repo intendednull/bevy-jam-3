@@ -4,7 +4,7 @@ use bevy::prelude::{self, *};
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    attribute::{AttackSpeed, AttackSpeedTimer, Damage, Experience, Speed},
+    attribute::{AttackSpeed, AttackSpeedTimer, Damage, Experience, Range, Speed},
     collision,
     projectile::ProjectileSpeed,
 };
@@ -50,6 +50,7 @@ fn setup(mut commands: Commands) {
                     | collision::group::LOOT,
             ),
             Damage(10),
+            Range(800.),
         ));
 }
 

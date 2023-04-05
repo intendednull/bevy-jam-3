@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::{self, *};
 use bevy_rapier2d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng};
@@ -7,9 +9,11 @@ use crate::{attribute::Health, collision, loot, player::Player};
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpawnTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
+        app.insert_resource(SpawnRate(Duration::from_secs(2)))
+            .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_system(spawn)
             .add_system(despawn_hostiles)
+            .add_system(update_spawn_timer)
             .add_system(move_to_player);
     }
 }
@@ -18,6 +22,16 @@ impl prelude::Plugin for Plugin {
 pub struct Hostile;
 #[derive(Debug, Clone, Resource)]
 pub struct SpawnTimer(pub Timer);
+#[derive(Debug, Clone, Resource)]
+pub struct SpawnRate(Duration);
+
+fn update_spawn_timer(mut timer: ResMut<SpawnTimer>, rate: Res<SpawnRate>) {
+    if !rate.is_changed() {
+        return;
+    }
+
+    timer.0.set_duration(rate.0);
+}
 
 fn spawn(
     mut commands: Commands,
@@ -29,11 +43,14 @@ fn spawn(
     let player = player.single();
     timer.0.tick(time.delta());
     if timer.0.just_finished() {
-        // TODO: Hostiles should only spawn off-screen
-        let x = rng.f32_normalized() * 1000.;
-        let y = rng.f32_normalized() * 1000.;
+        let pos = {
+            let x = rng.f32_normalized();
+            let y = rng.f32_normalized();
+            let val = Vec3 { x, y, z: 0. }.normalize();
+            player.translation + val * 1000.
+        };
 
-        let transform = Transform::from_translation(player.translation + Vec3 { x, y, z: 0. });
+        let transform = Transform::from_translation(pos);
         // Hostile
         commands
             .spawn(SpriteBundle {
