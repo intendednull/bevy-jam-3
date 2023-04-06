@@ -8,6 +8,7 @@ use crate::{
     attribute::{self, MaxHealth},
     collision, loot,
     player::Player,
+    GameState,
 };
 
 pub struct Plugin;
@@ -15,10 +16,10 @@ impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(SpawnRate(Duration::from_millis(100)))
             .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
-            .add_system(spawn)
-            .add_system(despawn_hostiles)
-            .add_system(update_spawn_timer)
-            .add_system(move_to_player);
+            .add_systems(
+                (spawn, despawn_hostiles, update_spawn_timer, move_to_player)
+                    .in_set(OnUpdate(GameState::Game)),
+            );
     }
 }
 

@@ -1,8 +1,8 @@
-use std::time::Duration;
+use std::{ops::Sub, time::Duration};
 
 use bevy::prelude::{self, *};
 use bevy_turborand::prelude::*;
-use strum::{EnumIter, IntoEnumIterator};
+use strum::{Display, EnumIter, IntoEnumIterator};
 
 use crate::{
     attribute::{AttackRange, AttackSpeed, Damage, MaxHealth, MoveSpeed},
@@ -12,11 +12,13 @@ use crate::{
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<Apply>().add_system(apply);
+        app.init_resource::<Choices>()
+            .add_event::<Apply>()
+            .add_system(apply);
     }
 }
 
-#[derive(EnumIter, Clone, Copy, Debug)]
+#[derive(EnumIter, Clone, Copy, Debug, Display)]
 pub enum Affect {
     Health,
     Damage,
@@ -26,10 +28,27 @@ pub enum Affect {
     SpawnRate,
 }
 
+#[derive(Resource, Default)]
+pub struct Choices(pub Vec<(Diff, Diff)>);
+
+impl Choices {
+    pub fn random(count: u32, rng: &mut GlobalRng) -> Self {
+        Self(
+            (0..count)
+                .map(|_| (Diff::random(rng), Diff::random(rng).neg()))
+                .collect(),
+        )
+    }
+
+    pub fn randomize(&mut self, count: u32, rng: &mut GlobalRng) {
+        *self = Self::random(count, rng);
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Diff {
-    affect: Affect,
-    value: f32,
+    pub affect: Affect,
+    pub value: f32,
 }
 
 impl Diff {
@@ -75,11 +94,14 @@ fn apply(
                 Affect::Damage => damage.0 = (((damage.0 as f32) * percent) as i32).max(1),
                 Affect::MoveSpeed => move_speed.0 *= percent,
                 Affect::AttackSpeed => {
-                    attack_speed.0 = Duration::from_secs_f32(attack_speed.0.as_secs_f32() * percent)
+                    attack_speed.0 = Duration::from_secs_f32(
+                        attack_speed.0.as_secs_f32() * (1. - percent.sub(1.)),
+                    )
                 }
                 Affect::AttackRange => attack_range.0 = (attack_range.0 * percent).max(10.),
                 Affect::SpawnRate => {
-                    spawn_rate.0 = Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * percent)
+                    spawn_rate.0 =
+                        Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * (1. - percent.sub(1.)))
                 }
             }
         }
