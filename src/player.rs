@@ -3,13 +3,14 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     attribute::{self, Experience, MoveSpeed},
-    collision,
+    collision, GameState,
 };
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system(move_player);
+        app.add_startup_system(setup)
+            .add_system(move_player.in_set(OnUpdate(GameState::Game)));
     }
 }
 
@@ -32,7 +33,7 @@ fn setup(mut commands: Commands) {
         Player,
         Experience {
             current: 0,
-            cap: 10,
+            cap: 100,
         },
         Collider::cuboid(20., 20.),
         GravityScale(0.),

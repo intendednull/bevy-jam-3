@@ -9,16 +9,21 @@ use crate::{
     collision,
     hostile::Hostile,
     player::Player,
+    GameState,
 };
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ProjectileEvent>()
-            .add_system(spawn_projectile)
-            .add_system(despawn_dead_projectiles)
-            .add_system(apply_damage)
-            .add_system(detect_collisions);
+        app.add_event::<ProjectileEvent>().add_systems(
+            (
+                spawn_projectile,
+                despawn_dead_projectiles,
+                apply_damage,
+                detect_collisions,
+            )
+                .in_set(OnUpdate(GameState::Game)),
+        );
     }
 }
 
