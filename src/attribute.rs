@@ -4,22 +4,16 @@ use bevy::{
     ecs::system::EntityCommands,
     prelude::{self, *},
 };
-use bevy_rapier2d::prelude::Velocity;
-use bevy_turborand::GlobalRng;
+use bevy_rapier2d::prelude::RapierConfiguration;
 
-use crate::{
-    buff,
-    loot::Loot,
-    projectile::{Projectile, ProjectileSpeed},
-    GameState,
-};
+use crate::{buff, projectile::ProjectileSpeed, GameState};
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(update_timer_with_attack_speed)
             .add_system(level_up)
-            .add_system(freeze_all_movement.in_set(OnUpdate(GameState::LevelUp)));
+            .add_system(freeze_all_movement);
     }
 }
 
@@ -66,10 +60,15 @@ fn update_timer_with_attack_speed(
     }
 }
 
-fn freeze_all_movement(mut query: Query<&mut Velocity, (Without<Loot>, Without<Projectile>)>) {
-    for mut velocity in query.iter_mut() {
-        velocity.linvel = Vec2::ZERO;
-        velocity.angvel = 0.;
+fn freeze_all_movement(mut config: ResMut<RapierConfiguration>, game_state: Res<State<GameState>>) {
+    if !game_state.is_changed() {
+        return;
+    }
+
+    if game_state.0 == GameState::LevelUp {
+        config.physics_pipeline_active = false;
+    } else {
+        config.physics_pipeline_active = true;
     }
 }
 
@@ -77,15 +76,14 @@ fn level_up(
     mut query: Query<&mut Experience, Changed<Experience>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut choices: ResMut<buff::Choices>,
-    mut rng: ResMut<GlobalRng>,
 ) {
     for mut experience in query.iter_mut() {
         if experience.current >= experience.cap {
             experience.current -= experience.cap;
             experience.cap += 100;
 
+            choices.remaining += 1;
             game_state.set(GameState::LevelUp);
-            choices.randomize(3, &mut rng);
         }
     }
 }

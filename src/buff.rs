@@ -29,19 +29,25 @@ pub enum Affect {
 }
 
 #[derive(Resource, Default)]
-pub struct Choices(pub Vec<(Diff, Diff)>);
+pub struct Choices {
+    pub inner: Vec<(Diff, Diff)>,
+    pub remaining: u32,
+}
 
 impl Choices {
     pub fn random(count: u32, rng: &mut GlobalRng) -> Self {
-        Self(
-            (0..count)
+        Self {
+            inner: (0..count)
                 .map(|_| (Diff::random(rng), Diff::random(rng).neg()))
                 .collect(),
-        )
+            remaining: 0,
+        }
     }
 
     pub fn randomize(&mut self, count: u32, rng: &mut GlobalRng) {
+        let remaining = self.remaining;
         *self = Self::random(count, rng);
+        self.remaining = remaining;
     }
 }
 

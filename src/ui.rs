@@ -15,10 +15,21 @@ fn select_power(
     player: Query<Entity, With<Player>>,
     mut contexts: EguiContexts,
     mut writer: EventWriter<buff::Apply>,
-    choices: Res<buff::Choices>,
+    mut choices: ResMut<buff::Choices>,
     mut game_state: ResMut<NextState<GameState>>,
+    mut rng: ResMut<GlobalRng>,
 ) {
+    if choices.remaining == 0 {
+        game_state.set(GameState::Game);
+        return;
+    }
+
+    if choices.inner.is_empty() {
+        choices.randomize(3, &mut rng);
+    }
+
     let player = player.single();
+    let mut remaining = choices.remaining;
     egui::Area::new("levelup").show(contexts.ctx_mut(), |ui| {
         ui.with_layout(
             egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
@@ -27,7 +38,7 @@ fn select_power(
                 ui.set_width(900.);
 
                 ui.horizontal(|ui| {
-                    for (positive, negative) in choices.0.iter() {
+                    for (positive, negative) in choices.inner.iter() {
                         let text = format!(
                             "Improve {} by {:.2}% \n decrease {} by {:.2}%",
                             positive.affect,
@@ -40,6 +51,7 @@ fn select_power(
                             .add_sized((300., 500.), egui::Button::new(text).wrap(true))
                             .clicked()
                         {
+                            remaining = remaining.saturating_sub(1);
                             writer.send_batch([
                                 buff::Apply {
                                     diff: *positive,
@@ -50,12 +62,16 @@ fn select_power(
                                     target: player,
                                 },
                             ]);
-
-                            game_state.set(GameState::Game);
                         }
                     }
                 });
             },
         );
     });
+
+    if choices.remaining != remaining {
+        choices.randomize(3, &mut rng);
+    }
+
+    choices.remaining = remaining;
 }
