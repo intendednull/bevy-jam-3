@@ -62,7 +62,8 @@ impl Diff {
         let affect = rng
             .sample_iter(Affect::iter())
             .expect("Failed to sample affect");
-        let value = rng.f32();
+        let values = [0.05, 0.1, 0.15, 0.2];
+        let value = *rng.sample(&values).expect("Failed to sample value");
         Self { affect, value }
     }
 

@@ -40,7 +40,7 @@ fn select_power(
                 ui.horizontal(|ui| {
                     for (positive, negative) in choices.inner.iter() {
                         let text = format!(
-                            "Improve {} by {:.2}% \n decrease {} by {:.2}%",
+                            "Improve {} by +{:.2}% \n\n\n\n Decrease {} by {:.2}%",
                             positive.affect,
                             positive.value * 100.,
                             negative.affect,
