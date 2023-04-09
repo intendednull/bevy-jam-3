@@ -6,12 +6,17 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::RapierConfiguration;
 
-use crate::{buff, hostile::SpawnRate, projectile::ProjectileSpeed, GameState};
+use crate::{
+    buff,
+    hostile::{Score, SpawnRate},
+    projectile::ProjectileSpeed,
+    GameState,
+};
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_timers.in_set(OnUpdate(GameState::Game)))
+        app.add_systems((update_timers, increase_difficulty).in_set(OnUpdate(GameState::Game)))
             .add_system(update_timer_with_attack_speed)
             .add_system(level_up)
             .add_system(freeze_all_movement);
@@ -83,7 +88,7 @@ fn update_timers(mut query: Query<&mut AttackSpeedTimer>, time: Res<Time>) {
 }
 
 fn level_up(
-    mut spawn_rate: ResMut<SpawnRate>,
+    _spawn_rate: ResMut<SpawnRate>,
     mut query: Query<&mut Experience, Changed<Experience>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut choices: ResMut<buff::Choices>,
@@ -95,8 +100,18 @@ fn level_up(
 
             choices.remaining += 1;
             game_state.set(GameState::LevelUp);
-
-            spawn_rate.0 = Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * 0.9);
         }
     }
+}
+
+fn increase_difficulty(mut spawn_rate: ResMut<SpawnRate>, score: Res<Score>) {
+    if !score.is_changed() {
+        return;
+    }
+
+    let base_duration = 0.5; // Base duration in seconds
+    let score_factor = 0.01; // Determines the rate at which the difficulty increases with score
+
+    let new_duration = base_duration / (1.0 + score_factor * score.0 as f32);
+    spawn_rate.0 = Duration::from_secs_f32(new_duration);
 }

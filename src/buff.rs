@@ -29,8 +29,6 @@ pub enum Affect {
     AttackSpeed,
     #[strum(serialize = "Attack Range")]
     AttackRange,
-    #[strum(serialize = "Enemy Spawn Rate")]
-    SpawnRate,
     #[strum(serialize = "Projectile Duplication Chance")]
     DupChance,
     #[strum(serialize = "Projectile Speed")]
@@ -105,7 +103,7 @@ fn apply(
         &mut DupChance,
         &mut ProjectileSpeed,
     )>,
-    mut spawn_rate: ResMut<hostile::SpawnRate>,
+    _spawn_rate: ResMut<hostile::SpawnRate>,
 ) {
     for event in reader.iter() {
         if let Ok((
@@ -133,10 +131,6 @@ fn apply(
                     )
                 }
                 Affect::AttackRange => attack_range.0 = (attack_range.0 * percent).max(10.),
-                Affect::SpawnRate => {
-                    spawn_rate.0 =
-                        Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * (1. - percent.sub(1.)))
-                }
                 Affect::DupChance => dup_chance.0 *= percent,
                 Affect::ProjectleSpeed => projectile_speed.0 *= percent,
             }
