@@ -48,7 +48,7 @@ fn select_power(
                         );
 
                         if ui
-                            .add_sized((300., 500.), egui::Button::new(text).wrap(true))
+                            .add_sized((300., 150.), egui::Button::new(text).wrap(true))
                             .clicked()
                         {
                             remaining = remaining.saturating_sub(1);

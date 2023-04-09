@@ -6,7 +6,7 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::RapierConfiguration;
 
-use crate::{buff, projectile::ProjectileSpeed, GameState};
+use crate::{buff, hostile::SpawnRate, projectile::ProjectileSpeed, GameState};
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
@@ -76,6 +76,7 @@ fn freeze_all_movement(mut config: ResMut<RapierConfiguration>, game_state: Res<
 }
 
 fn level_up(
+    mut spawn_rate: ResMut<SpawnRate>,
     mut query: Query<&mut Experience, Changed<Experience>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut choices: ResMut<buff::Choices>,
@@ -87,6 +88,8 @@ fn level_up(
 
             choices.remaining += 1;
             game_state.set(GameState::LevelUp);
+
+            spawn_rate.0 = Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * 0.9);
         }
     }
 }
