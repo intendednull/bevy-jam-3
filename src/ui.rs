@@ -5,6 +5,7 @@ use bevy_turborand::GlobalRng;
 use crate::{
     attribute::{Health, MaxHealth},
     buff,
+    hostile::Score,
     player::{self, Player},
     GameState,
 };
@@ -14,8 +15,22 @@ impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(select_power.in_set(OnUpdate(GameState::LevelUp)))
             .add_system(health)
+            .add_system(score)
             .add_system(restart.in_set(OnUpdate(GameState::Dead)));
     }
+}
+
+fn score(mut contexts: EguiContexts, score: Res<Score>) {
+    egui::Area::new("score").show(contexts.ctx_mut(), |ui| {
+        ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+            ui.scope(|ui| {
+                ui.style_mut().override_text_style = Some(egui::TextStyle::Heading);
+                ui.visuals_mut().override_text_color = Some(egui::Color32::BLACK);
+
+                ui.label(format!("Score: {}", score.0));
+            });
+        });
+    });
 }
 
 fn restart(
@@ -23,6 +38,7 @@ fn restart(
     player: Query<Entity, With<Player>>,
     mut commands: Commands,
     mut game_state: ResMut<NextState<GameState>>,
+    mut score: ResMut<Score>,
 ) {
     let player = player.single();
     egui::Area::new("death").show(contexts.ctx_mut(), |ui| {
@@ -44,6 +60,7 @@ fn restart(
                         commands.entity(player).despawn_recursive();
                         player::spawn(commands);
                         game_state.set(GameState::Game);
+                        score.0 = 0;
                     };
                 });
             },
@@ -59,7 +76,6 @@ fn health(mut contexts: EguiContexts, player: Query<(&Health, &MaxHealth), With<
             ui.set_width(900.);
 
             let health = health.0 as f32 / max.0 as f32;
-            println!("health: {}", health);
             ui.add(
                 egui::ProgressBar::new(health)
                     .text("Health")

@@ -16,6 +16,7 @@ impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(SpawnRate(Duration::from_millis(500)))
             .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
+            .init_resource::<Score>()
             .add_system(despawn_all_hostiles.in_set(OnUpdate(GameState::Dead)))
             .add_systems(
                 (
@@ -36,6 +37,8 @@ pub struct Hostile;
 pub struct SpawnTimer(pub Timer);
 #[derive(Debug, Clone, Resource)]
 pub struct SpawnRate(pub Duration);
+#[derive(Debug, Default, Clone, Resource)]
+pub struct Score(pub u128);
 
 fn update_spawn_timer(mut timer: ResMut<SpawnTimer>, rate: Res<SpawnRate>) {
     if !rate.is_changed() {
@@ -110,7 +113,6 @@ fn attack_player(
         }
 
         health.0 = health.0.saturating_sub(damage.0);
-        println!("Player health: {}", health.0);
 
         timer.0.reset();
     }
@@ -143,10 +145,12 @@ fn despawn_hostiles(
     query: Query<(Entity, &MaxHealth, &Transform), (With<Hostile>, Changed<MaxHealth>)>,
     mut commands: Commands,
     mut loot_writer: EventWriter<loot::Event>,
+    mut score: ResMut<Score>,
 ) {
     for (entity, health, transform) in query.iter() {
         if health.0 <= 0 {
             commands.entity(entity).despawn();
+            score.0 += 10;
             loot_writer.send(loot::Event(transform.translation));
         }
     }

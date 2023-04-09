@@ -123,7 +123,7 @@ fn apply(
             match event.diff.affect {
                 Affect::Health => {
                     max_health.0 = (((max_health.0 as f32) * percent) as i32).max(1);
-                    health.0 = (((max_health.0 as f32) * percent) as i32).max(1);
+                    health.0 = (((health.0 as f32) * percent) as i32).max(1);
                 }
                 Affect::Damage => damage.0 = (((damage.0 as f32) * percent) as i32).max(1),
                 Affect::MoveSpeed => move_speed.0 *= percent,
