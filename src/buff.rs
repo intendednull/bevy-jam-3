@@ -7,6 +7,7 @@ use strum::{Display, EnumIter, IntoEnumIterator};
 use crate::{
     attribute::{AttackRange, AttackSpeed, Damage, DupChance, MaxHealth, MoveSpeed},
     hostile,
+    projectile::ProjectileSpeed,
 };
 
 pub struct Plugin;
@@ -18,7 +19,7 @@ impl prelude::Plugin for Plugin {
     }
 }
 
-#[derive(EnumIter, Clone, Copy, Debug, Display)]
+#[derive(EnumIter, Clone, Copy, Debug, Display, PartialEq, Eq)]
 pub enum Affect {
     Health,
     Damage,
@@ -32,6 +33,8 @@ pub enum Affect {
     SpawnRate,
     #[strum(serialize = "Projectile Duplication Chance")]
     DupChance,
+    #[strum(serialize = "Projectile Speed")]
+    ProjectleSpeed,
 }
 
 #[derive(Resource, Default)]
@@ -44,7 +47,11 @@ impl Choices {
     pub fn random(count: u32, rng: &mut GlobalRng) -> Self {
         Self {
             inner: (0..count)
-                .map(|_| (Diff::random(rng), Diff::random(rng).neg()))
+                .map(|_| {
+                    let buff = Diff::random(rng, None);
+                    let debuff = Diff::random(rng, Some(buff.affect)).neg();
+                    (buff, debuff)
+                })
                 .collect(),
             remaining: 0,
         }
@@ -64,9 +71,9 @@ pub struct Diff {
 }
 
 impl Diff {
-    pub fn random(rng: &mut GlobalRng) -> Self {
+    pub fn random(rng: &mut GlobalRng, skip: Option<Affect>) -> Self {
         let affect = rng
-            .sample_iter(Affect::iter())
+            .sample_iter(Affect::iter().filter(|a| Some(*a) != skip))
             .expect("Failed to sample affect");
         let values = [0.05, 0.1, 0.15, 0.2];
         let value = *rng.sample(&values).expect("Failed to sample value");
@@ -95,6 +102,7 @@ fn apply(
         &mut AttackSpeed,
         &mut AttackRange,
         &mut DupChance,
+        &mut ProjectileSpeed,
     )>,
     mut spawn_rate: ResMut<hostile::SpawnRate>,
 ) {
@@ -106,6 +114,7 @@ fn apply(
             mut attack_speed,
             mut attack_range,
             mut dup_chance,
+            mut projectile_speed,
         )) = query.get_mut(event.target)
         {
             let percent = 1. + event.diff.value;
@@ -124,6 +133,7 @@ fn apply(
                         Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * (1. - percent.sub(1.)))
                 }
                 Affect::DupChance => dup_chance.0 *= percent,
+                Affect::ProjectleSpeed => projectile_speed.0 *= percent,
             }
         }
     }

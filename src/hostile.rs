@@ -14,7 +14,7 @@ use crate::{
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpawnRate(Duration::from_millis(100)))
+        app.insert_resource(SpawnRate(Duration::from_millis(500)))
             .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_systems(
                 (spawn, despawn_hostiles, update_spawn_timer, move_to_player)

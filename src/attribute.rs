@@ -49,7 +49,7 @@ pub fn insert_common(commands: &mut EntityCommands) {
         MoveSpeed(2.5),
         MaxHealth(100),
         Health(100),
-        DupChance(0.5),
+        DupChance(0.1),
     ));
 }
 
