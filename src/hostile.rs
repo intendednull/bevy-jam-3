@@ -5,7 +5,7 @@ use bevy_rapier2d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng};
 
 use crate::{
-    attribute::{self, MaxHealth},
+    attribute::{self, AttackSpeedTimer, Damage, Health, MaxHealth},
     collision, loot,
     player::Player,
     GameState,
@@ -16,8 +16,15 @@ impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(SpawnRate(Duration::from_millis(500)))
             .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
+            .add_system(despawn_all_hostiles.in_set(OnUpdate(GameState::Dead)))
             .add_systems(
-                (spawn, despawn_hostiles, update_spawn_timer, move_to_player)
+                (
+                    spawn,
+                    despawn_hostiles,
+                    update_spawn_timer,
+                    move_to_player,
+                    attack_player,
+                )
                     .in_set(OnUpdate(GameState::Game)),
             );
     }
@@ -83,6 +90,35 @@ fn spawn(
         ));
 
         attribute::insert_common(&mut commands);
+    }
+}
+
+fn attack_player(
+    context: Res<RapierContext>,
+    mut hostiles: Query<(Entity, &Damage, &mut AttackSpeedTimer), With<Hostile>>,
+    mut player: Query<(Entity, &mut Health), With<Player>>,
+) {
+    let (player, mut health) = player.single_mut();
+    for (hostile, damage, mut timer) in hostiles.iter_mut() {
+        let has_contact = context
+            .contact_pair(hostile, player)
+            .map(|pair| pair.has_any_active_contacts())
+            .unwrap_or(false);
+
+        if !has_contact || !timer.0.finished() {
+            continue;
+        }
+
+        health.0 = health.0.saturating_sub(damage.0);
+        println!("Player health: {}", health.0);
+
+        timer.0.reset();
+    }
+}
+
+fn despawn_all_hostiles(mut commands: Commands, query: Query<Entity, With<Hostile>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
     }
 }
 

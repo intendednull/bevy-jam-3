@@ -11,7 +11,8 @@ use crate::{buff, hostile::SpawnRate, projectile::ProjectileSpeed, GameState};
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_timer_with_attack_speed)
+        app.add_system(update_timers.in_set(OnUpdate(GameState::Game)))
+            .add_system(update_timer_with_attack_speed)
             .add_system(level_up)
             .add_system(freeze_all_movement);
     }
@@ -68,10 +69,16 @@ fn freeze_all_movement(mut config: ResMut<RapierConfiguration>, game_state: Res<
         return;
     }
 
-    if game_state.0 == GameState::LevelUp {
+    if game_state.0 != GameState::Game {
         config.physics_pipeline_active = false;
     } else {
         config.physics_pipeline_active = true;
+    }
+}
+
+fn update_timers(mut query: Query<&mut AttackSpeedTimer>, time: Res<Time>) {
+    for mut timer in query.iter_mut() {
+        timer.0.tick(time.delta());
     }
 }
 

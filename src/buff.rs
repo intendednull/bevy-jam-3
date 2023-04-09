@@ -5,7 +5,7 @@ use bevy_turborand::prelude::*;
 use strum::{Display, EnumIter, IntoEnumIterator};
 
 use crate::{
-    attribute::{AttackRange, AttackSpeed, Damage, DupChance, MaxHealth, MoveSpeed},
+    attribute::{AttackRange, AttackSpeed, Damage, DupChance, Health, MaxHealth, MoveSpeed},
     hostile,
     projectile::ProjectileSpeed,
 };
@@ -97,6 +97,7 @@ fn apply(
     mut reader: EventReader<Apply>,
     mut query: Query<(
         &mut MaxHealth,
+        &mut Health,
         &mut Damage,
         &mut MoveSpeed,
         &mut AttackSpeed,
@@ -108,6 +109,7 @@ fn apply(
 ) {
     for event in reader.iter() {
         if let Ok((
+            mut max_health,
             mut health,
             mut damage,
             mut move_speed,
@@ -119,7 +121,10 @@ fn apply(
         {
             let percent = 1. + event.diff.value;
             match event.diff.affect {
-                Affect::Health => health.0 = (((health.0 as f32) * percent) as i32).max(1),
+                Affect::Health => {
+                    max_health.0 = (((max_health.0 as f32) * percent) as i32).max(1);
+                    health.0 = (((max_health.0 as f32) * percent) as i32).max(1);
+                }
                 Affect::Damage => damage.0 = (((damage.0 as f32) * percent) as i32).max(1),
                 Affect::MoveSpeed => move_speed.0 *= percent,
                 Affect::AttackSpeed => {

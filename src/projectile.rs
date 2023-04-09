@@ -45,7 +45,6 @@ pub struct ProjectileEvent {
 
 fn spawn_projectile(
     keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
     mut player: Query<(Entity, &Transform, &ProjectileSpeed, &mut AttackSpeedTimer), With<Player>>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -59,9 +58,6 @@ fn spawn_projectile(
     direction.y += keyboard_input.pressed(KeyCode::Up) as i32 as f32;
     direction.y -= keyboard_input.pressed(KeyCode::Down) as i32 as f32;
     direction *= projectile_speed.0;
-
-    // Spawn projectile
-    timer.0.tick(time.delta());
 
     if direction == Vec2::ZERO || !timer.0.finished() {
         return;

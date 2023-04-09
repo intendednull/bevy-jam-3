@@ -2,22 +2,22 @@ use bevy::prelude::{self, *};
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    attribute::{self, Experience, MoveSpeed},
+    attribute::{self, Experience, Health, MoveSpeed},
     collision, GameState,
 };
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(move_player.in_set(OnUpdate(GameState::Game)));
+        app.add_startup_system(spawn)
+            .add_systems((move_player, die).in_set(OnUpdate(GameState::Game)));
     }
 }
 
 #[derive(Default, Component)]
 pub struct Player;
 
-fn setup(mut commands: Commands) {
+pub fn spawn(mut commands: Commands) {
     // Player
     let mut player = commands.spawn(SpriteBundle {
         sprite: Sprite {
@@ -46,6 +46,17 @@ fn setup(mut commands: Commands) {
     ));
 
     attribute::insert_common(&mut player);
+}
+
+fn die(
+    query: Query<&Health, (With<Player>, Changed<Health>)>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    for health in query.iter() {
+        if health.0 <= 0 {
+            game_state.set(GameState::Dead);
+        }
+    }
 }
 
 /// Move player with WASD

@@ -18,6 +18,7 @@ enum GameState {
     #[default]
     Game,
     LevelUp,
+    Dead,
 }
 
 fn main() {

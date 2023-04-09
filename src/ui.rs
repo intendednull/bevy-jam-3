@@ -2,13 +2,71 @@ use bevy::prelude::{self, *};
 use bevy_egui::{egui, EguiContexts};
 use bevy_turborand::GlobalRng;
 
-use crate::{buff, player::Player, GameState};
+use crate::{
+    attribute::{Health, MaxHealth},
+    buff,
+    player::{self, Player},
+    GameState,
+};
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(select_power.in_set(OnUpdate(GameState::LevelUp)));
+        app.add_system(select_power.in_set(OnUpdate(GameState::LevelUp)))
+            .add_system(health)
+            .add_system(restart.in_set(OnUpdate(GameState::Dead)));
     }
+}
+
+fn restart(
+    mut contexts: EguiContexts,
+    player: Query<Entity, With<Player>>,
+    mut commands: Commands,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    let player = player.single();
+    egui::Area::new("death").show(contexts.ctx_mut(), |ui| {
+        ui.with_layout(
+            egui::Layout::centered_and_justified(egui::Direction::TopDown),
+            |ui| {
+                egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
+                    ui.set_height(700.);
+                    ui.set_width(1000.);
+
+                    ui.scope(|ui| {
+                        ui.style_mut().override_text_style = Some(egui::TextStyle::Heading);
+                        ui.visuals_mut().override_text_color = Some(egui::Color32::RED);
+
+                        ui.label("You died!");
+                    });
+
+                    if ui.button("Restart").clicked() {
+                        commands.entity(player).despawn_recursive();
+                        player::spawn(commands);
+                        game_state.set(GameState::Game);
+                    };
+                });
+            },
+        );
+    });
+}
+
+fn health(mut contexts: EguiContexts, player: Query<(&Health, &MaxHealth), With<Player>>) {
+    let (health, max) = player.single();
+    egui::Area::new("health").show(contexts.ctx_mut(), |ui| {
+        ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+            ui.set_height(500.);
+            ui.set_width(900.);
+
+            let health = health.0 as f32 / max.0 as f32;
+            println!("health: {}", health);
+            ui.add(
+                egui::ProgressBar::new(health)
+                    .text("Health")
+                    .fill(egui::Color32::RED),
+            );
+        });
+    });
 }
 
 fn select_power(
