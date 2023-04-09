@@ -5,7 +5,7 @@ use bevy_turborand::prelude::*;
 use strum::{Display, EnumIter, IntoEnumIterator};
 
 use crate::{
-    attribute::{AttackRange, AttackSpeed, Damage, MaxHealth, MoveSpeed},
+    attribute::{AttackRange, AttackSpeed, Damage, DupChance, MaxHealth, MoveSpeed},
     hostile,
 };
 
@@ -22,10 +22,16 @@ impl prelude::Plugin for Plugin {
 pub enum Affect {
     Health,
     Damage,
+    #[strum(serialize = "Movement Speed")]
     MoveSpeed,
+    #[strum(serialize = "Attack Speed")]
     AttackSpeed,
+    #[strum(serialize = "Attack Range")]
     AttackRange,
+    #[strum(serialize = "Enemy Spawn Rate")]
     SpawnRate,
+    #[strum(serialize = "Projectile Duplication Chance")]
+    DupChance,
 }
 
 #[derive(Resource, Default)]
@@ -88,12 +94,19 @@ fn apply(
         &mut MoveSpeed,
         &mut AttackSpeed,
         &mut AttackRange,
+        &mut DupChance,
     )>,
     mut spawn_rate: ResMut<hostile::SpawnRate>,
 ) {
     for event in reader.iter() {
-        if let Ok((mut health, mut damage, mut move_speed, mut attack_speed, mut attack_range)) =
-            query.get_mut(event.target)
+        if let Ok((
+            mut health,
+            mut damage,
+            mut move_speed,
+            mut attack_speed,
+            mut attack_range,
+            mut dup_chance,
+        )) = query.get_mut(event.target)
         {
             let percent = 1. + event.diff.value;
             match event.diff.affect {
@@ -110,6 +123,7 @@ fn apply(
                     spawn_rate.0 =
                         Duration::from_secs_f32(spawn_rate.0.as_secs_f32() * (1. - percent.sub(1.)))
                 }
+                Affect::DupChance => dup_chance.0 *= percent,
             }
         }
     }

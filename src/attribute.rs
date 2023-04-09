@@ -18,6 +18,8 @@ impl prelude::Plugin for Plugin {
 }
 
 #[derive(Default, Component)]
+pub struct DupChance(pub f32);
+#[derive(Default, Component)]
 pub struct MoveSpeed(pub f32);
 #[derive(Default, Component)]
 pub struct Damage(pub i32);
@@ -47,6 +49,7 @@ pub fn insert_common(commands: &mut EntityCommands) {
         MoveSpeed(2.5),
         MaxHealth(100),
         Health(100),
+        DupChance(0.5),
     ));
 }
 
