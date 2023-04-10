@@ -142,14 +142,19 @@ fn move_to_player(
     }
 }
 
+pub struct EnemyDeathEvent(pub Vec3);
+
 fn despawn_hostiles(
     query: Query<(Entity, &MaxHealth, &Transform), (With<Hostile>, Changed<MaxHealth>)>,
     mut commands: Commands,
     mut loot_writer: EventWriter<loot::Event>,
     mut score: ResMut<Score>,
+    mut ev_enemy_death: EventWriter<EnemyDeathEvent>,
 ) {
     for (entity, health, transform) in query.iter() {
         if health.0 <= 0 {
+            ev_enemy_death.send(EnemyDeathEvent(transform.translation));
+            //ev_enemy_death.send(EnemyDeathEvent());
             commands.entity(entity).despawn();
             score.0 += 10;
             loot_writer.send(loot::Event(transform.translation));

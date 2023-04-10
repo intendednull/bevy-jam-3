@@ -48,7 +48,7 @@ fn move_loot_to_player(
     player: Query<(&Transform, &MoveSpeed), With<Player>>,
     time: Res<Time>,
 ) {
-    let (player, speed) = player.single();
+    let (player, _speed) = player.single();
     for (mut velocity, transform) in query.iter_mut() {
         let direction = {
             let val = (player.translation - transform.translation).normalize();
@@ -56,7 +56,7 @@ fn move_loot_to_player(
         };
         velocity.linvel = velocity
             .linvel
-            .lerp(direction * speed.0 * 200., time.delta_seconds() * 3.);
+            .lerp(direction * 5. * 200., time.delta_seconds() * 3.);
     }
 }
 

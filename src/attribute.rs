@@ -5,6 +5,7 @@ use bevy::{
     prelude::{self, *},
 };
 use bevy_rapier2d::prelude::RapierConfiguration;
+use bevy_turborand::GlobalRng;
 
 use crate::{
     buff,
@@ -87,16 +88,22 @@ fn update_timers(mut query: Query<&mut AttackSpeedTimer>, time: Res<Time>) {
     }
 }
 
+pub struct LevelUpEvent();
+
 fn level_up(
-    _spawn_rate: ResMut<SpawnRate>,
     mut query: Query<&mut Experience, Changed<Experience>>,
-    mut game_state: ResMut<NextState<GameState>>,
     mut choices: ResMut<buff::Choices>,
+    _writer: EventWriter<buff::Apply>,
+    mut ev_levelup: EventWriter<LevelUpEvent>,
+    _rng: ResMut<GlobalRng>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     for mut experience in query.iter_mut() {
         if experience.current >= experience.cap {
             experience.current -= experience.cap;
             experience.cap += 100;
+
+            ev_levelup.send(LevelUpEvent());
 
             choices.remaining += 1;
             game_state.set(GameState::LevelUp);

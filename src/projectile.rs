@@ -44,12 +44,15 @@ pub struct ProjectileEvent {
     pub target: Entity,
 }
 
+pub struct ShootEvent();
+
 fn spawn_projectile(
     keyboard_input: Res<Input<KeyCode>>,
     mut player: Query<(Entity, &Transform, &ProjectileSpeed, &mut AttackSpeedTimer), With<Player>>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut ev_shoot: EventWriter<ShootEvent>,
 ) {
     let (_player_entity, player_transform, projectile_speed, mut timer) = player.single_mut();
     // Determine direction of projectile base on arrow keys on keyboard
@@ -74,6 +77,7 @@ fn spawn_projectile(
     );
 
     timer.0.reset();
+    ev_shoot.send(ShootEvent());
 }
 
 fn spawn(
