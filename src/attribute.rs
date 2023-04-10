@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{
     ecs::system::EntityCommands,
-    prelude::{self, *},
+    prelude::{self, *}, log::Level,
 };
 use bevy_turborand::GlobalRng;
 
@@ -59,15 +59,19 @@ fn update_timer_with_attack_speed(
     }
 }
 
+pub struct LevelUpEvent();
+
 fn level_up(
     mut query: Query<(&mut Experience, Entity), Changed<Experience>>,
     mut writer: EventWriter<buff::Apply>,
+    mut ev_levelup: EventWriter<LevelUpEvent>,
     mut rng: ResMut<GlobalRng>,
 ) {
     for (mut experience, entity) in query.iter_mut() {
         if experience.current >= experience.cap {
             experience.current -= experience.cap;
             experience.cap *= 2;
+            ev_levelup.send(LevelUpEvent());
 
             writer.send_batch([
                 buff::Apply {

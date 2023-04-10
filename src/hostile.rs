@@ -43,8 +43,10 @@ fn spawn(
     mut timer: ResMut<SpawnTimer>,
     mut rng: ResMut<GlobalRng>,
     player: Query<&Transform, With<Player>>,
+    asset_server: Res<AssetServer>,
 ) {
-    let player = player.single();
+
+    let mut player = player.single();
     timer.0.tick(time.delta());
     if timer.0.just_finished() {
         let pos = {
@@ -102,13 +104,18 @@ fn move_to_player(
     }
 }
 
+pub struct EnemyDeathEvent(pub Vec3);
+
 fn despawn_hostiles(
     query: Query<(Entity, &MaxHealth, &Transform), (With<Hostile>, Changed<MaxHealth>)>,
     mut commands: Commands,
     mut loot_writer: EventWriter<loot::Event>,
+    mut ev_enemy_death: EventWriter<EnemyDeathEvent>,
 ) {
     for (entity, health, transform) in query.iter() {
         if health.0 <= 0 {
+            ev_enemy_death.send(EnemyDeathEvent(transform.translation));
+            //ev_enemy_death.send(EnemyDeathEvent());
             commands.entity(entity).despawn();
             loot_writer.send(loot::Event(transform.translation));
         }

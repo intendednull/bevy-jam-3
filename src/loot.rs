@@ -56,7 +56,7 @@ fn move_loot_to_player(
         };
         velocity.linvel = velocity
             .linvel
-            .lerp(direction * speed.0 * 200., time.delta_seconds() * 3.);
+            .lerp(direction * 5. * 200., time.delta_seconds() * 3.);
     }
 }
 
