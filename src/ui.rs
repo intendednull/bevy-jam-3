@@ -68,7 +68,7 @@ fn restart(
             |ui| {
                 egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
                     ui.set_height(700.);
-                    ui.set_width(1000.);
+                    ui.set_width(700.);
 
                     ui.scope(|ui| {
                         ui.style_mut().override_text_style = Some(egui::TextStyle::Heading);

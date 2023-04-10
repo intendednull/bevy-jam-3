@@ -82,7 +82,7 @@ fn spawn(
             GravityScale(0.0),
             Velocity::default(),
             RigidBody::Dynamic,
-            Collider::cuboid(20., 20.),
+            Collider::cuboid(15., 15.),
             Friction::coefficient(0.),
             CollisionGroups::new(
                 collision::group::HOSTILE,

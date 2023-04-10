@@ -37,7 +37,7 @@ pub fn spawn(mut commands: Commands) {
             current: 0,
             cap: 100,
         },
-        Collider::cuboid(20., 20.),
+        Collider::cuboid(15., 15.),
         GravityScale(0.),
         CollisionGroups::new(
             collision::group::PLAYER,
