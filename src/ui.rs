@@ -35,6 +35,7 @@ pub const RED: Color = Color(105, 20, 14);
 pub const ORANGE: Color = Color(255, 101, 66);
 pub const BLUE: Color = Color(29, 47, 111);
 pub const OFFWHITE: Color = Color(231, 236, 239);
+pub const YELLOW: Color = Color(248, 243, 43);
 
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
@@ -143,7 +144,7 @@ fn select_power(
                 ui.horizontal(|ui| {
                     for (positive, negative) in choices.inner.iter() {
                         let text = format!(
-                            "Improve {} by +{:.2}% \n\n\n\n Decrease {} by {:.2}%",
+                            "Improve {} by +{:.2}% \n\n\n\n Degrade {} by {:.2}%",
                             positive.affect,
                             positive.value * 100.,
                             negative.affect,

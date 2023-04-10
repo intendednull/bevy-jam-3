@@ -5,7 +5,9 @@ use bevy_turborand::prelude::*;
 use strum::{Display, EnumIter, IntoEnumIterator};
 
 use crate::{
-    attribute::{AttackRange, AttackSpeed, Damage, DupChance, Health, MaxHealth, MoveSpeed},
+    attribute::{
+        AttackRange, AttackSpeed, Damage, DupChance, HealChance, Health, MaxHealth, MoveSpeed,
+    },
     hostile,
     projectile::ProjectileSpeed,
 };
@@ -21,7 +23,10 @@ impl prelude::Plugin for Plugin {
 
 #[derive(EnumIter, Clone, Copy, Debug, Display, PartialEq, Eq)]
 pub enum Affect {
-    Health,
+    #[strum(serialize = "Max Health")]
+    MaxHealth,
+    #[strum(serialize = "Health Drop Chance")]
+    DropHealh,
     Damage,
     #[strum(serialize = "Movement Speed")]
     MoveSpeed,
@@ -73,7 +78,7 @@ impl Diff {
         let affect = rng
             .sample_iter(Affect::iter().filter(|a| Some(*a) != skip))
             .expect("Failed to sample affect");
-        let values = [0.05, 0.1, 0.15, 0.2];
+        let values = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5];
         let value = *rng.sample(&values).expect("Failed to sample value");
         Self { affect, value }
     }
@@ -96,6 +101,7 @@ fn apply(
     mut query: Query<(
         &mut MaxHealth,
         &mut Health,
+        &mut HealChance,
         &mut Damage,
         &mut MoveSpeed,
         &mut AttackSpeed,
@@ -109,6 +115,7 @@ fn apply(
         if let Ok((
             mut max_health,
             mut health,
+            mut heal_chance,
             mut damage,
             mut move_speed,
             mut attack_speed,
@@ -119,7 +126,7 @@ fn apply(
         {
             let percent = 1. + event.diff.value;
             match event.diff.affect {
-                Affect::Health => {
+                Affect::MaxHealth => {
                     max_health.0 = (((max_health.0 as f32) * percent) as i32).max(1);
                     health.0 = (((health.0 as f32) * percent) as i32).max(1);
                 }
@@ -133,6 +140,7 @@ fn apply(
                 Affect::AttackRange => attack_range.0 = (attack_range.0 * percent).max(10.),
                 Affect::DupChance => dup_chance.0 *= percent,
                 Affect::ProjectleSpeed => projectile_speed.0 *= percent,
+                Affect::DropHealh => heal_chance.0 *= percent,
             }
         }
     }

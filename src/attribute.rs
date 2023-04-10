@@ -19,6 +19,7 @@ impl prelude::Plugin for Plugin {
         app.add_systems((update_timers, increase_difficulty).in_set(OnUpdate(GameState::Game)))
             .add_system(update_timer_with_attack_speed)
             .add_system(level_up)
+            .add_system(max_health)
             .add_system(freeze_all_movement);
     }
 }
@@ -33,6 +34,8 @@ pub struct Damage(pub i32);
 pub struct MaxHealth(pub i32);
 #[derive(Default, Component)]
 pub struct Health(pub i32);
+#[derive(Default, Component)]
+pub struct HealChance(pub f32);
 #[derive(Debug, Clone, Component)]
 pub struct AttackSpeedTimer(pub Timer);
 #[derive(Debug, Clone, Component)]
@@ -55,7 +58,8 @@ pub fn insert_common(commands: &mut EntityCommands) {
         MoveSpeed(2.5),
         MaxHealth(100),
         Health(100),
-        DupChance(0.1),
+        HealChance(0.1),
+        DupChance(0.25),
     ));
 }
 
@@ -108,13 +112,21 @@ fn level_up(
     }
 }
 
+fn max_health(mut query: Query<(&mut Health, &MaxHealth)>) {
+    for (mut health, max_health) in query.iter_mut() {
+        if health.0 > max_health.0 {
+            health.0 = max_health.0;
+        }
+    }
+}
+
 fn increase_difficulty(mut spawn_rate: ResMut<SpawnRate>, score: Res<Score>) {
     if !score.is_changed() {
         return;
     }
 
-    let base_duration = 3.;
-    let score_factor = 0.002;
+    let base_duration = 1.;
+    let score_factor = 0.003;
 
     let new_duration = base_duration / (1.0 + score_factor * score.0 as f32);
     spawn_rate.0 = Duration::from_secs_f32(new_duration);
