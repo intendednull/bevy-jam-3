@@ -10,6 +10,9 @@ use crate::{
     GameState,
 };
 
+pub struct UiClickedEvent;
+pub struct UpgradeSelectedEvent;
+
 pub struct Color(pub u8, pub u8, pub u8);
 
 impl From<Color> for egui::Color32 {
@@ -36,7 +39,9 @@ pub const OFFWHITE: Color = Color(231, 236, 239);
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(select_power.in_set(OnUpdate(GameState::LevelUp)))
+        app.add_event::<UiClickedEvent>()
+            .add_event::<UpgradeSelectedEvent>()
+            .add_system(select_power.in_set(OnUpdate(GameState::LevelUp)))
             .add_system(health)
             .add_system(score)
             .add_system(restart.in_set(OnUpdate(GameState::Dead)));
@@ -60,6 +65,7 @@ fn restart(
     mut commands: Commands,
     mut game_state: ResMut<NextState<GameState>>,
     mut score: ResMut<Score>,
+    mut writer: EventWriter<UiClickedEvent>,
 ) {
     let player = player.single();
     egui::Area::new("death").show(contexts.ctx_mut(), |ui| {
@@ -82,6 +88,7 @@ fn restart(
                         player::spawn(commands);
                         game_state.set(GameState::Game);
                         score.0 = 0;
+                        writer.send(UiClickedEvent);
                     };
                 });
             },
@@ -113,6 +120,7 @@ fn select_power(
     mut choices: ResMut<buff::Choices>,
     mut game_state: ResMut<NextState<GameState>>,
     mut rng: ResMut<GlobalRng>,
+    mut update_selected_writer: EventWriter<UpgradeSelectedEvent>,
 ) {
     if choices.remaining == 0 {
         game_state.set(GameState::Game);
@@ -157,6 +165,7 @@ fn select_power(
                                     target: player,
                                 },
                             ]);
+                            update_selected_writer.send(UpgradeSelectedEvent);
                         }
                     }
                 });

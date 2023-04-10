@@ -37,6 +37,8 @@ fn play_sfx(
     mut ev_levelup: EventReader<crate::attribute::LevelUpEvent>,
     mut ev_enemy_death: EventReader<crate::hostile::EnemyDeathEvent>,
     mut ev_shoot: EventReader<crate::projectile::ShootEvent>,
+    mut ev_ui_select: EventReader<crate::ui::UiClickedEvent>,
+    mut ev_upgrade_select: EventReader<crate::ui::UpgradeSelectedEvent>,
     // mut ev_ui_select: EventReader<crate::CRATENAME::UiClickEvent>,
     // mut ev_ui_nav: EventReader<crate::CRATENAME::UiNavigateEvent>,
 ) {
@@ -74,16 +76,16 @@ fn play_sfx(
     }
 
     // Create event for UI "Select"
-    /*for ev in ev_ui_select.iter() {
+    for _ev in ev_upgrade_select.iter() {
         let sfx = asset_server.load("drink_potion.wav");
         ui_audio.set_volume(0.03);
         ui_audio.play(sfx);
-    }*/
+    }
 
     // Create event for UI "Navigation"
-    /*for ev in ev_ui_nav.iter() {
+    for _ev in ev_ui_select.iter() {
         let sfx = asset_server.load("ui_menu_click.wav");
         ui_audio.set_volume(0.01);
         ui_audio.play(sfx);
-    }*/
+    }
 }

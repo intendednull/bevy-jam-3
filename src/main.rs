@@ -13,7 +13,7 @@ mod ui;
 use attribute::LevelUpEvent;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use bevy_kira_audio::prelude::{*};
+use bevy_kira_audio::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_turborand::RngPlugin;
 use hostile::EnemyDeathEvent;
@@ -31,7 +31,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugin(RapierDebugRenderPlugin::default())
+        // .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(RngPlugin::default())
         .add_plugin(EguiPlugin)
         .add_state::<GameState>()
