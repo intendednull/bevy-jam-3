@@ -8,6 +8,7 @@ use crate::{
     attribute::{self, AttackSpeedTimer, Damage, Health, MaxHealth},
     collision, loot,
     player::Player,
+    ui::ORANGE,
     GameState,
 };
 
@@ -68,7 +69,7 @@ fn spawn(
         let transform = Transform::from_translation(pos);
         let mut commands = commands.spawn(SpriteBundle {
             sprite: Sprite {
-                color: Color::RED,
+                color: ORANGE.into(),
                 custom_size: Some(Vec2::new(30.0, 30.0)),
                 ..default()
             },

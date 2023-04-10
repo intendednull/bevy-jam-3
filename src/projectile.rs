@@ -10,6 +10,7 @@ use crate::{
     collision,
     hostile::Hostile,
     player::Player,
+    ui::OFFWHITE,
     GameState,
 };
 
@@ -83,10 +84,11 @@ fn spawn(
     begin: &Transform,
     last_hit: Option<Entity>,
 ) {
+    let color: prelude::Color = OFFWHITE.into();
     commands
         .spawn(MaterialMesh2dBundle {
             mesh: meshes.add(shape::Circle::new(5.).into()).into(),
-            material: materials.add(ColorMaterial::from(Color::MIDNIGHT_BLUE)),
+            material: materials.add(ColorMaterial::from(color)),
             ..default()
         })
         .insert((

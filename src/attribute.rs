@@ -47,10 +47,10 @@ pub struct Experience {
 
 pub fn insert_common(commands: &mut EntityCommands) {
     commands.insert((
-        Damage(10),
+        Damage(35),
         AttackRange(800.),
         AttackSpeedTimer(Timer::from_seconds(0.5, TimerMode::Once)),
-        AttackSpeed(Duration::from_millis(100)),
+        AttackSpeed(Duration::from_millis(500)),
         ProjectileSpeed(500.),
         MoveSpeed(2.5),
         MaxHealth(100),
@@ -109,8 +109,8 @@ fn increase_difficulty(mut spawn_rate: ResMut<SpawnRate>, score: Res<Score>) {
         return;
     }
 
-    let base_duration = 0.5; // Base duration in seconds
-    let score_factor = 0.01; // Determines the rate at which the difficulty increases with score
+    let base_duration = 3.;
+    let score_factor = 0.002;
 
     let new_duration = base_duration / (1.0 + score_factor * score.0 as f32);
     spawn_rate.0 = Duration::from_secs_f32(new_duration);

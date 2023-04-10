@@ -10,6 +10,29 @@ use crate::{
     GameState,
 };
 
+pub struct Color(pub u8, pub u8, pub u8);
+
+impl From<Color> for egui::Color32 {
+    fn from(color: Color) -> Self {
+        Self::from_rgb(color.0, color.1, color.2)
+    }
+}
+
+impl From<Color> for prelude::Color {
+    fn from(color: Color) -> Self {
+        prelude::Color::rgb(
+            color.0 as f32 / 255.,
+            color.1 as f32 / 255.,
+            color.2 as f32 / 255.,
+        )
+    }
+}
+
+pub const RED: Color = Color(105, 20, 14);
+pub const ORANGE: Color = Color(255, 101, 66);
+pub const BLUE: Color = Color(29, 47, 111);
+pub const OFFWHITE: Color = Color(231, 236, 239);
+
 pub struct Plugin;
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut App) {
@@ -22,13 +45,11 @@ impl prelude::Plugin for Plugin {
 
 fn score(mut contexts: EguiContexts, score: Res<Score>) {
     egui::Area::new("score").show(contexts.ctx_mut(), |ui| {
-        ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-            ui.scope(|ui| {
-                ui.style_mut().override_text_style = Some(egui::TextStyle::Heading);
-                ui.visuals_mut().override_text_color = Some(egui::Color32::BLACK);
+        ui.scope(|ui| {
+            ui.style_mut().override_text_style = Some(egui::TextStyle::Heading);
+            ui.visuals_mut().override_text_color = Some(OFFWHITE.into());
 
-                ui.label(format!("Score: {}", score.0));
-            });
+            ui.label(format!("Score: {}", score.0));
         });
     });
 }
@@ -79,7 +100,7 @@ fn health(mut contexts: EguiContexts, player: Query<(&Health, &MaxHealth), With<
             ui.add(
                 egui::ProgressBar::new(health)
                     .text("Health")
-                    .fill(egui::Color32::RED),
+                    .fill(RED.into()),
             );
         });
     });

@@ -3,7 +3,9 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{
     attribute::{self, Experience, Health, MoveSpeed},
-    collision, GameState,
+    collision,
+    ui::BLUE,
+    GameState,
 };
 
 pub struct Plugin;
@@ -21,7 +23,7 @@ pub fn spawn(mut commands: Commands) {
     // Player
     let mut player = commands.spawn(SpriteBundle {
         sprite: Sprite {
-            color: Color::rgb(0.25, 0.25, 0.75),
+            color: BLUE.into(),
             custom_size: Some(Vec2::new(30.0, 30.0)),
             ..default()
         },
