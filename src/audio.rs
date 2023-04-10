@@ -39,6 +39,7 @@ fn play_sfx(
     mut ev_enemy_death: EventReader<crate::hostile::EnemyDeathEvent>,
     mut ev_shoot: EventReader<crate::projectile::ShootEvent>,
 //  mut ev_ui_select: EventReader<crate::CRATENAME::UiClickEvent>,
+//  mut ev_ui_nav: EventReader<crate::CRATENAME::UiNavigateEvent>,
 ) {
     for ev in ev_levelup.iter() {
         ui_audio.set_volume(0.03);
@@ -51,6 +52,7 @@ fn play_sfx(
         enemy_audio.set_volume(0.045);
 
         let enemy_loc = ev.0;
+
         let sfx = asset_server.load("monster_take_damage_1.wav");
         //dbg!(enemyLoc);
         let death_sound = enemy_audio
@@ -68,7 +70,7 @@ fn play_sfx(
     }
 
     for ev in ev_shoot.iter() {
-        shooting_audio.set_volume(0.005);
+        shooting_audio.set_volume(0.01);
 
         let sfx = asset_server.load("projectile_01.wav");
         let death_sound = shooting_audio
@@ -78,8 +80,15 @@ fn play_sfx(
 
     // Create event for UI "Select"
     /*for ev in ev_ui_select.iter() {
-    let sfx = asset_server.load("ui_menu_click.wav");
-        ui_audio.play(sfx);
+        let sfx = asset_server.load("drink_potion.wav");
         ui_audio.set_volume(0.03);
+        ui_audio.play(sfx);
+    }*/
+
+    // Create event for UI "Navigation"
+    /*for ev in ev_ui_nav.iter() {
+        let sfx = asset_server.load("ui_menu_click.wav");
+        ui_audio.set_volume(0.01);
+        ui_audio.play(sfx);
     }*/
 }

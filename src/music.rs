@@ -15,5 +15,5 @@ fn start_bgm(asset_server: Res<AssetServer>, bgm_audio: Res<AudioChannel<BgmChan
     let bgm = bgm_audio
         .play(bgm_track).looped()
         .handle();
-    bgm_audio.set_volume(0.007);
+    bgm_audio.set_volume(0.01);
 }
